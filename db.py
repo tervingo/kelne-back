@@ -11,3 +11,4 @@ client = AsyncIOMotorClient(MONGODB_URI)
 db = client[DB_NAME]
 
 roots_collection = db["roots"]
+words_collection = db["words"]
