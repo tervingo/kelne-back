@@ -24,13 +24,19 @@ class Conjugation(str, Enum):
     receptiva = "receptiva"
 
 
+class DerivedWordRef(BaseModel):
+    """Referencia ligera a una palabra en la colección words."""
+    kelne: str
+    cat:   str  # WordCat value: N, V, PN, …
+
+
 class Base(BaseModel):
     degree:      Degree
     type:        WordType
     voice:       Optional[Voice] = None
     conjugation: Optional[Conjugation] = None
     translation: str
-    derived_words: list[str] = Field(default=[], alias="derivedWords")
+    derived_words: list[DerivedWordRef] = Field(default=[], alias="derivedWords")
 
     model_config = {"populate_by_name": True}
 
@@ -42,12 +48,11 @@ class RootCreate(BaseModel):
 
 
 class RootUpdate(BaseModel):
-    root:  Optional[str] = None
+    """root es inmutable — solo notes y bases son actualizables."""
     notes: Optional[str] = None
     bases: Optional[list[Base]] = None
 
 
-# Used for the list endpoint (no bases detail needed in sidebar)
 class RootListItem(BaseModel):
     id:    str = Field(alias="_id")
     root:  str

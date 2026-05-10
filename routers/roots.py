@@ -17,25 +17,24 @@ def serialize_word(doc: dict) -> dict:
 
 
 async def populate_words(doc: dict) -> dict:
-    """Replace word ID strings in each base's derivedWords with full word documents.
-    Entries that are not valid ID strings (e.g. legacy inline dicts) are silently dropped.
+    """Sustituye los refs {kelne, cat} de cada base con el documento completo de words.
+    Busca por raiz=root.root y hace match por (kelne, cat).
     """
-    all_ids = [
-        ObjectId(wid)
-        for base in doc.get("bases", [])
-        for wid in base.get("derivedWords", [])
-        if isinstance(wid, str) and ObjectId.is_valid(wid)
-    ]
-    words_map: dict[str, dict] = {}
-    if all_ids:
-        async for word in words_collection.find({"_id": {"$in": all_ids}}):
-            words_map[str(word["_id"])] = serialize_word(word)
+    root_str = doc.get("root", "")
+    words_map: dict[tuple, dict] = {}
+    if root_str:
+        async for word in words_collection.find({"raiz": root_str}):
+            key = (word["kelne"], word["cat"])
+            words_map[key] = serialize_word(word)
+
     for base in doc.get("bases", []):
-        base["derivedWords"] = [
-            words_map[wid]
-            for wid in base.get("derivedWords", [])
-            if isinstance(wid, str) and wid in words_map
-        ]
+        populated = []
+        for ref in base.get("derivedWords", []):
+            if isinstance(ref, dict):
+                key = (ref.get("kelne", ""), ref.get("cat", ""))
+                if key in words_map:
+                    populated.append(words_map[key])
+        base["derivedWords"] = populated
     return doc
 
 
@@ -45,7 +44,7 @@ async def list_roots(q: str = Query(default="")):
     if q:
         query = {
             "$or": [
-                {"root":             {"$regex": q, "$options": "i"}},
+                {"root":              {"$regex": q, "$options": "i"}},
                 {"bases.translation": {"$regex": q, "$options": "i"}},
             ]
         }
@@ -85,17 +84,10 @@ async def update_root(root_id: str, data: RootUpdate):
 @router.delete("/{root_id}", status_code=204)
 async def delete_root(root_id: str):
     doc = await roots_collection.find_one(
-        {"_id": ObjectId(root_id)}, {"bases.derivedWords": 1}
+        {"_id": ObjectId(root_id)}, {"root": 1}
     )
     if not doc:
         raise HTTPException(status_code=404, detail="Raíz no encontrada")
-    # Cascade: borrar todas las palabras asociadas
-    word_ids = [
-        ObjectId(wid)
-        for base in doc.get("bases", [])
-        for wid in base.get("derivedWords", [])
-        if ObjectId.is_valid(wid)
-    ]
-    if word_ids:
-        await words_collection.delete_many({"_id": {"$in": word_ids}})
+    # Cascade: borrar todas las palabras cuyo campo raiz coincide con este root string
+    await words_collection.delete_many({"raiz": doc["root"]})
     await roots_collection.delete_one({"_id": ObjectId(root_id)})
