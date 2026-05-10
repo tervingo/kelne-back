@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import Optional, Union
 from pydantic import BaseModel, Field
 
 
@@ -33,7 +33,7 @@ class WordCreate(BaseModel):
     tipo:  Optional[str] = None
     # clase: NombreClase (AH1/AH2/AA1/UC/V1/C1/I1) | string libre para verbos
     clase: Optional[str] = None
-    raiz:  Optional[str] = None   # _id de la raíz asociada
+    raiz:  Optional[Union[str, list[str]]] = None  # string para simples, lista para compuestos
     voz:   Optional[Voz] = None   # solo verbos
     alin:  Optional[Alin] = None  # solo verbos
 
@@ -45,7 +45,7 @@ class WordUpdate(BaseModel):
     com:   Optional[str] = None
     tipo:  Optional[str] = None
     clase: Optional[str] = None
-    raiz:  Optional[str] = None
+    raiz:  Optional[Union[str, list[str]]] = None
     voz:   Optional[Voz] = None
     alin:  Optional[Alin] = None
 
