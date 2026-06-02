@@ -70,7 +70,7 @@ def _build_pdf(words: list[dict]) -> bytes:
     pdf.add_page()
     pdf.ln(50)
     pdf.set_font(F, 'B', 28)
-    pdf.cell(0, 14, 'Kelnena', align='C', new_x='LMARGIN', new_y='NEXT')
+    pdf.cell(0, 14, 'Kelnen', align='C', new_x='LMARGIN', new_y='NEXT')
     pdf.set_font(F, '', 18)
     pdf.cell(0, 10, 'Taulseberjo', align='C', new_x='LMARGIN', new_y='NEXT')
     pdf.ln(10)

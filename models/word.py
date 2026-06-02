@@ -8,6 +8,7 @@ class WordCat(str, Enum):
     V  = "V"
     PN = "PN"
     DT = "DT"
+    NU = "NU"
     AV = "AV"
     AF = "AF"
     CJ = "CJ"
